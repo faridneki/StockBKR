@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma"
 
 import { StockData } from "@/type"
 
-import { stock} from "@prisma/client"
+import { Stock} from "@prisma/client"
 
 export async function getStocks() {
   try {
@@ -49,13 +49,7 @@ export async function getStkAtWithPricing(): Promise<StkAtWithPricing[]> {
     // Récupérer tous les articles de stk_at
     const stkAtItems = await prisma.$queryRaw`
       SELECT 
-        Ref_at,
-        Designation_at,
-        Loc_at,
-        EnStock_at,
-        Quantite_at,
-        Stk_min_at,
-        Stk_in_at
+      *  
       FROM stk_at
     `;
 
