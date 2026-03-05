@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Stock {
+  n            Int     @default(autoincrement())
+  Reference    String  @db.VarChar(15)
+  Designation  String? @db.VarChar(60)
+  Emplacement  String? @db.VarChar(10)
+  EnStock      String? @db.VarChar(1)
+  RefCategorie String? @db.VarChar(4)
+  PMatiere     Float?
+  Marge        Float?
+  Taxe         Float?
+  Quantite     Float?
+  Seuil        Float?
+
+  @@id([n, Reference])
+}
+
+model stk_at {
+  Ref_at         String  @id @db.VarChar(15)
+  Designation_at String? @db.VarChar(60)
+  Loc_at         String? @db.VarChar(10)
+  EnStock_at     String? @db.VarChar(1)
+  Quantite_at    Float?
+  Stk_min_at     Float?
+  Stk_in_at      Float?
+}
+
+model utilisateurs {
+  id         Int       @id @default(autoincrement())
+  email      String    @unique(map: "emailUnique") @db.Char
+  nom        String?   @db.Char
+  prenom     String?   @db.Char
+  password   String    @db.Char
+  role       String    @default("user") @db.Char
+  actif      Boolean   @default(false)
+  created_at DateTime? @db.Date
+  updated_at DateTime? @db.Date
+}
