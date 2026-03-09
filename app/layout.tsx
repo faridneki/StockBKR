@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "SAV PRO - Vue sur Stock",
-  description: "Application Vue sur stock",
+  description: "Application Vue sur stock",manifest: '/manifest.json',
 };
 
 export default function RootLayout({
