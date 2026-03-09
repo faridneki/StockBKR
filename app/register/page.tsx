@@ -78,7 +78,7 @@ export default function RegisterPage() {
               <p>Votre compte a été créé avec succès.</p>
               <p className="success-hint">Connectez-vous maintenant pour accéder à votre espace.</p>
               
-              <button onClick={goToLogin} className="success-button">
+              <button onClick={goToLogin} className="success-button"> 
                 <span>Se connecter</span>
                 <ArrowRight size={18} />
               </button>
@@ -279,7 +279,7 @@ export default function RegisterPage() {
           </form>
 
           <div className="register-footer">
-            <p>Déjà un compte ? <Link href="/login" className="register-link">Se connecter</Link></p>
+            <p>Déjà un compte ? <Link href="/login"className="login-link" style={{ color: "var(--green)" }}>Se connecter</Link></p>
           </div>
         </div>
 
