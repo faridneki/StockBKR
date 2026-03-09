@@ -1,10 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  devIndicators: false,
   eslint: {
-    // Attention: cela désactive ESLint pendant le build en production
     ignoreDuringBuilds: true,
   },
 };
