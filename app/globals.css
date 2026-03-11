@@ -1280,3 +1280,34 @@ body {
   background: #e3f2fd;
   border: 1px solid #1976d2;
 }
+/* -------------------------------------------*/
+/* Rendre la colonne Référence sticky */
+.data-table th:first-child,
+.data-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: inherit;
+  white-space: nowrap;        /* Empêche le retour à la ligne */
+  overflow: hidden;           /* Cache le débordement */
+  text-overflow: ellipsis;    /* Ajoute ... si le texte est trop long */
+  max-width: 150px;           /* Largeur maximale (ajustez selon besoin) */
+  min-width: 120px;           /* Largeur minimale */
+}
+
+/* Pour l'en-tête */
+.data-table th:first-child {
+  background-color: var(--bg-primary);
+  z-index: 20;
+}
+
+/* Pour les cellules du corps */
+.data-table td:first-child {
+  background-color: #111213;
+  z-index: 5;
+}
+
+/* Pour gérer le hover sans casser l'effet sticky */
+.data-table tbody tr:hover td:first-child {
+  background-color: var(--bg-hover);
+}
