@@ -7,37 +7,47 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Warehouse,
+  AlertTriangle,
+  TrendingDown,
   Package,
 } from "lucide-react";
 import Wrapper from "@/app/components/Wrapper";
 import { useAuth } from "@/app/context/AuthContext";
-import { getStocks } from "@/app/actions";
+import { getStockRestant } from "@/app/actions";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
 // Types
-interface Stock {
+interface StockRestant {
   Reference: string;
   Designation: string;
-  Emplacement: string;
+  Emplacement_principal: string;
   EnStock: string;
   RefCategorie: string;
   PMatiere: number;
   Marge: number;
   Taxe: number;
-  Quantite: number;
+  Quantite_stock: number;
+  Quantite_stk_at: number;
+  Quantite_restante: number;
   Seuil: number;
+ Emplacement_bejaia: string | null;
+  Seuil_secondaire: number |  null;
+  Designation_at: string | null;
+  EnStock_at: string | null;
 }
 
 const StocksPage = () => {
-  const { user, isLoading: authLoading } = useAuth(); // Remplace useUser de Clerk
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [stocks, setStocks] = useState<Stock[]>([]);
-  const [filteredStocks, setFilteredStocks] = useState<Stock[]>([]);
+  const [stocks, setStocks] = useState<StockRestant[]>([]);
+  const [filteredStocks, setFilteredStocks] = useState<StockRestant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilter, setSearchFilter] = useState<string>("tous");
+  const [stockFilter, setStockFilter] = useState<string>("tous");
   const [currentPage, setCurrentPage] = useState(1);
 
   const rowsPerPage = 10;
@@ -46,6 +56,17 @@ const StocksPage = () => {
     { value: "tous", label: "Tous les critères" },
     { value: "reference", label: "Référence" },
     { value: "designation", label: "Désignation" },
+    { value: "emplacement", label: "Emplacement" },
+  ];
+
+  const filterOptions = [
+    { value: "tous", label: "Tous les articles" },
+    { value: "alerte", label: "Stock Global en alerte" },
+    { value: "stockminbejaia", label: "Stock Béjaia en alerte" },
+    { value: "disponible", label: "Articles dispo Global" },
+    { value: "epuise", label: "Articles Non dispo Global" },
+    { value: "transfert", label: "Articles dispo Béjaia" },
+    
   ];
 
   // Rediriger vers login si non authentifié
@@ -57,57 +78,86 @@ const StocksPage = () => {
 
   useEffect(() => {
     if (user) {
-      loadStocks();
+      loadData();
     }
   }, [user]);
 
-  const loadStocks = async () => {
+  useEffect(() => {
+    let filtered = [...stocks];
+
+    // Filtre par recherche
+    if (searchTerm.trim()) {
+      const value = searchTerm.toLowerCase();
+      filtered = filtered.filter((stock) => {
+        switch (searchFilter) {
+          case "reference":
+            return stock.Reference?.toLowerCase().includes(value);
+          case "designation":
+            return stock.Designation?.toLowerCase().includes(value);
+          case "emplacement":
+            return (
+              stock.Emplacement_principal?.toLowerCase().includes(value) ||
+              stock.Emplacement_bejaia?.toLowerCase().includes(value)
+            );
+          case "tous":
+          default:
+            return (
+              stock.Reference?.toLowerCase().includes(value) ||
+              stock.Designation?.toLowerCase().includes(value) ||
+              stock.Emplacement_principal?.toLowerCase().includes(value) ||
+              stock.Emplacement_bejaia?.toLowerCase().includes(value)
+            );
+        }
+      });
+    }
+
+    // Filtre par état du stock
+    switch (stockFilter) {
+      case "alerte":
+        filtered = filtered.filter(
+          (stock) => stock.Quantite_stock < stock.Seuil
+        );
+        break;
+      case "disponible":
+        filtered = filtered.filter((stock) => stock.Quantite_stock > 0);
+        break;
+      case "epuise":
+        filtered = filtered.filter((stock) => stock.Quantite_stock === 0);
+        break;
+      case "transfert":
+        filtered = filtered.filter((stock) => stock.Quantite_stk_at > 0);
+        break;
+      case "stockminbejaia":
+        filtered = filtered.filter((stock) => stock.Quantite_stk_at < stock.Seuil_bejaia !); 
+        break;  
+      default:
+        break;
+    }
+
+    setFilteredStocks(filtered);
+    setCurrentPage(1);
+  }, [searchTerm, searchFilter, stockFilter, stocks]);
+
+  const loadData = async () => {
     setIsLoading(true);
     try {
-      const data = await getStocks();
-      setStocks(data as Stock[]);
-setFilteredStocks(data as Stock[]);
+      const data = await getStockRestant();
+      setStocks(data as any[]);
+      setFilteredStocks(data as any[]);
     } catch (error) {
-      console.error("Erreur chargement stocks:", error);
-      toast.error("Erreur lors du chargement des stocks");
+      console.error("Erreur chargement stock restant:", error);
+      toast.error("Erreur lors du chargement des données");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-    setCurrentPage(1);
-
-    if (!value.trim()) {
-      setFilteredStocks(stocks);
-      return;
-    }
-
-    const filtered = stocks.filter((stock) => {
-      switch (searchFilter) {
-        case "reference":
-          return stock.Reference?.toLowerCase().includes(value);
-        case "designation":
-          return stock.Designation?.toLowerCase().includes(value);
-        case "tous":
-        default:
-          return (
-            stock.Reference?.toLowerCase().includes(value) ||
-            stock.Designation?.toLowerCase().includes(value)
-          );
-      }
-    });
-
-    setFilteredStocks(filtered);
-  };
-
   const resetSearch = () => {
     setSearchTerm("");
+    setSearchFilter("tous");
+    setStockFilter("tous");
     setFilteredStocks(stocks);
     setCurrentPage(1);
-    setSearchFilter("tous");
   };
 
   const totalPages = Math.ceil(filteredStocks.length / rowsPerPage);
@@ -126,6 +176,7 @@ setFilteredStocks(data as Stock[]);
       setCurrentPage(currentPage - 1);
     }
   };
+
   const calculerPrixHT = (pMatiere: number | null, marge: number | null) => {
     if (pMatiere === null || marge === null) return null;
     return pMatiere + (pMatiere * marge) / 100;
@@ -140,9 +191,28 @@ setFilteredStocks(data as Stock[]);
     return new Intl.NumberFormat("fr-DZ", {
       style: "currency",
       currency: "DZD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(prix || 0);
+  };
+
+  const getStockStatus = (restant: number, seuil: number) => {
+    if (restant <= 0) return { class: "epuise", text: "Épuisé" };
+    if (restant < seuil) return { class: "alerte", text: "Stock bas" };
+    return { class: "normal", text: "Normal" };
+  };
+
+  // Calcul des statistiques
+  const stats = {
+    total: stocks.length,
+    valeurTotale: stocks.reduce((acc, stock) => {
+      const prixHT = calculerPrixHT(stock.PMatiere, stock.Marge);
+      const prixTTC = calculerPrixTTC(prixHT, stock.Taxe);
+      return acc + (prixTTC || 0) * stock.Quantite_restante;
+    }, 0),
+    enAlerte: stocks.filter((s) => s.Quantite_restante < s.Seuil).length,
+    transferes: stocks.filter((s) => s.Quantite_stk_at > 0).length,
+    quantiteTotale: stocks.reduce((acc, s) => acc + s.Quantite_restante, 0),
   };
 
   // Afficher loading pendant la vérification auth
@@ -152,7 +222,7 @@ setFilteredStocks(data as Stock[]);
         <div className="loading-screen">
           <div className="loading-content">
             <RefreshCw className="spinner" />
-            <p className="loading-text">Chargement...</p>
+            <p className="loading-text">Chargement du stock restant...</p>
           </div>
         </div>
       </Wrapper>
@@ -161,26 +231,24 @@ setFilteredStocks(data as Stock[]);
 
   return (
     <Wrapper>
-      <div className="stock-page">
+      <div className="stock-restant-page">
         <div className="stock-header">
           <h1 className="stock-title">
-            <Package size={32} />
-            Vue sur Stock Général
+            <Warehouse size={32} />
+            Vue sur Stock
           </h1>
           <p className="stock-subtitle">
             {filteredStocks.length} Article(s) trouvé(s)
           </p>
         </div>
 
+        
+
         <div className="search-bar">
           <div className="search-row">
             <select
               value={searchFilter}
-              onChange={(e) => {
-                setSearchFilter(e.target.value);
-                setSearchTerm("");
-                setFilteredStocks(stocks);
-              }}
+              onChange={(e) => setSearchFilter(e.target.value)}
               className="search-select"
             >
               {searchOptions.map((option) => (
@@ -194,9 +262,9 @@ setFilteredStocks(data as Stock[]);
               <Search className="search-icon" />
               <input
                 type="text"
-                placeholder={`Rechercher par ${searchOptions.find((opt) => opt.value === searchFilter)?.label.toLowerCase()}...`}
+                placeholder="Rechercher..."
                 value={searchTerm}
-                onChange={handleSearch}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
               />
               {searchTerm && (
@@ -206,7 +274,19 @@ setFilteredStocks(data as Stock[]);
               )}
             </div>
 
-            <button onClick={loadStocks} className="btn">
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="search-select filter-select"
+            >
+              {filterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <button onClick={loadData} className="btn">
               <RefreshCw size={16} />
               Actualiser
             </button>
@@ -218,23 +298,30 @@ setFilteredStocks(data as Stock[]);
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Référence</th>
-                  <th>Désignation</th>
-                  <th style={{ textAlign: "center", color: "var(--green)" }}>
-                    Qté
+                  <th style={{ textAlign: "center", color: "var(--red)", fontWeight: "bold" }}>
+                  Référence</th>
+                  <th style={{ textAlign: "center", color: "var(--purple)" }}>
+                    Désignation</th>
+                  <th style={{ textAlign: "center", color: "var(--blue)" }}>
+                    Qté Globale
                   </th>
-                  <th style={{ textAlign: "center", color: "var(--pink)" }}>
-                    Localisation
+                   <th style={{ textAlign: "center", color: "var(--green)" }}>
+                    Qté Takarietz
                   </th>
-                  <th style={{ textAlign: "right" }}>Prix Matière</th>
-                  <th style={{ textAlign: "center" }}>Marge %</th>
-                  <th style={{ textAlign: "center" }}>Taxe %</th>
+                  <th style={{ textAlign: "center", color: "var(--orange)" }}>
+                    Qté Béjaia
+                  </th>
+                 
+                  
+                  <th style={{ textAlign: "center", color: "#e61089" }}>Takarietz Loc.</th>
+                  <th style={{ textAlign: "center", color: "#e0f406" }}>Béjaia Loc.</th>                 
                   <th style={{ textAlign: "right", color: "var(--green)" }}>
                     Prix HT
                   </th>
-                  <th style={{ textAlign: "right", color: "var(--pink)" }}>
+                  <th style={{ textAlign: "right", color: "#e61089" }}>
                     Prix TTC
                   </th>
+                  <th style={{ textAlign: "center" }}>Statut</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,38 +330,69 @@ setFilteredStocks(data as Stock[]);
                     const prixHT = calculerPrixHT(stock.PMatiere, stock.Marge);
                     const prixTTC = calculerPrixTTC(prixHT, stock.Taxe);
                     const hasPricing = stock.PMatiere !== null;
+                    const status = getStockStatus(
+                      stock.Quantite_restante,
+                      stock.Seuil
+                    );
 
                     return (
                       <tr
                         key={stock.Reference}
-                        className={!hasPricing ? "row-dimmed" : ""}
+                        className={
+                          !hasPricing
+                            ? "row-dimmed"
+                            : status.class === "alerte"
+                            ? "row-warning"
+                            : status.class === "epuise"
+                            ? "row-danger"
+                            : ""
+                        }
                       >
-                        <td className="cell-ref-at">{stock.Reference}</td>
+                        <td className="price-ttc-badge">{stock.Reference}</td>
                         <td
                           className="cell-designation"
                           title={stock.Designation || ""}
                         >
                           {stock.Designation || "-"}
                         </td>
-                        <td className="cell-qty" >
+                         <td className="cell-qty" >
                           <span className="badge-qty">
-                            {stock.Quantite || 0}
+                            {stock.Quantite_stock || 0}
                           </span>
                         </td>
-                        <td className="cell-price-ttc" style={{ textAlign: "center" }}>
-                          <span className="price-ttc-badge ">
-                            {stock.Emplacement || "-"}
+                         <td
+                          className="cell-qty-restant"
+                          style={{ textAlign: "center" }}
+                        >
+                          <span
+                            className={`badge-restant ${status.class}`}
+                            title={`Seuil: ${stock.Seuil}`}
+                          >
+                            {stock.Quantite_restante || 0}
                           </span>
                         </td>
-                        <td className="cell-pm">
-                          {formatPrix(stock.PMatiere)}
+
+
+                        <td className="cell-qty-at" style={{ textAlign: "center" }}>
+                          <span
+                            className={`badge-qty ${stock.Quantite_stk_at > 0 ? "transfered" : ""}`}
+                          >
+                            {stock.Quantite_stk_at || 0}
+                          </span>
                         </td>
-                        <td className="cell-marge">
-                          {stock.Marge ? `${stock.Marge}%` : "-"}
+                       
+                        
+                        <td style={{ textAlign: "center" }}>
+                          <span className="location-badge">
+                            {stock.Emplacement_principal || "-"}
+                          </span>
                         </td>
-                        <td className="cell-taxe">
-                          {stock.Taxe ? `${stock.Taxe}%` : "-"}
+                        <td style={{ textAlign: "center" }}>
+                          <span className="location-badge secondary">
+                            {stock.Emplacement_bejaia || "-"}
+                          </span>
                         </td>
+                       
                         <td className="cell-price-ht">
                           {formatPrix(prixHT || 0)}
                         </td>
@@ -283,12 +401,17 @@ setFilteredStocks(data as Stock[]);
                             {formatPrix(prixTTC || 0)}
                           </span>
                         </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className={`status-badge ${status.class}`}>
+                            {status.text}
+                          </span>
+                        </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={11}>
+                    <td colSpan={13}>
                       <div className="empty-state">
                         <Search className="empty-icon" />
                         <p className="empty-title">Aucun article trouvé</p>
@@ -332,6 +455,8 @@ setFilteredStocks(data as Stock[]);
             </div>
           )}
         </div>
+
+        
       </div>
     </Wrapper>
   );

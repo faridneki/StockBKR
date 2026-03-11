@@ -11,21 +11,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = [
-    { 
-      href: "/", 
-      label: "Takarietz", 
-      icon: LayoutDashboard, 
-      shortLabel: "Stock Général", 
-    },
-    { 
-      href: "/articles", 
-      label: "Béjaia", 
-      icon: Atom, 
-      shortLabel: "Stock Béjaia", 
-    }
-    
-  ];
+  
 
   const isLinkActive = (href: string) => {
     if (href === "/") {
@@ -73,7 +59,7 @@ const Navbar = () => {
                <div className="logo-text">
                 <span className="logo-title">Stock</span>
                 <span className="logo-subtitle">Réalisé par </span>
-                <span className="stock-subtitle"> Farid Ben</span>
+                <span className="stock-subtitle"> Farid Benazzouz</span>
               </div>
             </Link>
             <div className="navbar-right">
@@ -114,23 +100,7 @@ const Navbar = () => {
             
             {/* Navigation Desktop */}
             <div className="nav-desktop">
-              {navLinks.map(({ href, label, icon: Icon, shortLabel }) => {
-                const isActive = isLinkActive(href);
-                
-                return (
-                  <Link
-                    href={href}
-                    key={href}
-                    className={`nav-link ${isActive ? 'active' : ''}`}
-                    title={label}
-                  >
-                    <div className="nav-link-icon-wrapper">
-                      <Icon className="nav-link-icon" />
-                    </div>
-                    <span className="nav-link-text">{shortLabel}</span>
-                  </Link>
-                );
-              })}
+            
             </div>
           </div>
 
@@ -203,35 +173,19 @@ const Navbar = () => {
         </div>
 
         <div className="mobile-nav-links">
-          {navLinks.map(({ href, label, icon: Icon }) => {
-            const isActive = isLinkActive(href);
-            
-            return (
-              <Link
-                href={href}
-                key={href}
-                className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                <div className="mobile-nav-link-icon-wrapper">
-                  <Icon className="mobile-nav-link-icon" />
-                </div>
-                <span>{label}</span>
-              </Link>
-            );
-          })}
+      
           
           <button
             onClick={handleLogout}
-            className="mobile-nav-link"
+            className="nav-link"
             style={{ 
               marginTop: 'auto',
               borderTop: '1px solid var(--border-color)',
               color: 'var(--red)'
             }}
           >
-            <div className="mobile-nav-link-icon-wrapper">
-              <LogOut className="mobile-nav-link-icon" />
+            <div className="nav-link-icon-wrapper">
+              <LogOut className="nav-link-icon" />
             </div>
             <span>Déconnexion</span>
           </button>

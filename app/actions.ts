@@ -25,7 +25,25 @@ export async function getStocks() {
 }
 
 
-
+// Dans votre page, remplacez l'interface par :
+interface StockRestant {
+  Reference: string;
+  Designation: string;
+  Emplacement_principal: string;
+  EnStock: string;
+  RefCategorie: string;
+  PMatiere: number;
+  Marge: number;
+  Taxe: number;
+  Quantite_stock: number;
+  Quantite_stk_at: number;
+  Quantite_restante: number;
+  Seuil: number;
+  Emplacement_bejaia: string | null;  // Correction : enlever le 't' à la fin
+  Seuil_bejaia: number | null;        // Ajouter si nécessaire
+  Designation_bejaia: string | null;  // Ajouter si nécessaire
+  EnStock_bejaia: string | null;      // Ajouter si nécessaire
+}
 
 
 
@@ -115,5 +133,59 @@ export async function getStkAtWithPricing(): Promise<StkAtWithPricing[]> {
   } catch (error) {
     console.error("Erreur lors de la récupération des données stk_at:", error);
     throw new Error("Impossible de récupérer les données avec tarification");
+  }
+}
+export async function getStockRestant() {
+  try {
+    // Récupérer tous les stocks
+    const stocks = await prisma.stock.findMany();
+    
+    // Récupérer tous les stk_at
+    const stkAtItems = await prisma.stk_at.findMany();
+    
+    // Créer un map pour les données stk_at par référence
+    const stkAtMap = new Map();
+    stkAtItems.forEach(item => {
+      stkAtMap.set(item.Ref_at, {
+        quantite_at: item.Quantite_at || 0,
+        loc_at: item.Loc_at,
+        stk_min_at: item.Stk_min_at,
+        stk_in_at: item.Stk_in_at,
+        designation_at: item.Designation_at,
+        enstock_at: item.EnStock_at
+      });
+    });
+    
+    // Fusionner les données
+    const formattedResult = stocks.map(stock => {
+      const stkAtData = stkAtMap.get(stock.Reference);
+      
+      const quantiteStkAt = stkAtData?.quantite_at || 0;
+      const quantiteStock = stock.Quantite || 0;
+      
+      return {
+        Reference: stock.Reference || '',
+        Designation: stock.Designation || '',
+        Emplacement_principal: stock.Emplacement || '',
+        EnStock: stock.EnStock || '',
+        RefCategorie: stock.RefCategorie || '',
+        PMatiere: stock.PMatiere || 0,
+        Marge: stock.Marge || 0,
+        Taxe: stock.Taxe || 0,
+        Quantite_stock: quantiteStock,
+        Quantite_stk_at: quantiteStkAt,
+        Quantite_restante: quantiteStock - quantiteStkAt,
+        Seuil: stock.Seuil || 0,
+        Emplacement_bejaia: stkAtData?.loc_at || null,
+        Seuil_bejaia: stkAtData?.stk_min_at || null,
+        Designation_bejaia: stkAtData?.designation_at || null,
+        EnStock_bejaia: stkAtData?.enstock_at || null
+      };
+    });
+    
+    return formattedResult;
+  } catch (error) {
+    console.error("Erreur dans getStockRestant:", error);
+    throw new Error("Impossible de récupérer les données du stock restant");
   }
 }

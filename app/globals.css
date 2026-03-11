@@ -266,11 +266,12 @@ body {
 }
 
 .cell-designation {
-  color: var(--text-primary);
+  color: var(--purple);
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  
 }
 
 .cell-qty {
@@ -280,7 +281,7 @@ body {
 .badge-qty {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  background-color: rgba(73, 4, 247, 0.1);
+  background-color: #040506;
   color: var(--green);
   border-radius: 4px;
   font-size: 0.75rem;
@@ -519,9 +520,12 @@ body {
 
 /* Tableau Stk_at spécifique */
 .cell-ref-at {
+  background-color: var(--cyan);
   font-family: monospace;
   font-weight: 600;
-  color: var(--cyan);
+  color: rgb(71, 113, 240);
+  
+  
 }
 
 .cell-qty-at {
@@ -559,8 +563,8 @@ body {
 }
 
 .price-ttc-badge {
-  background-color: rgba(255, 121, 198, 0.1);
-  color: var(--pink);
+  background-color: #76baf6;
+  color: #e61089;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: 700;
@@ -1077,7 +1081,7 @@ body {
 }
 
 .mobile-nav-link.active .mobile-nav-link-icon-wrapper {
-  background-color: rgba(255, 121, 198, 0.2);
+  background-color: rgba(243, 5, 140, 0.2);
 }
 
 .mobile-nav-link-icon {
@@ -1086,8 +1090,8 @@ body {
   flex-shrink: 0;
 }
 
-.mobile-nav-link-icon.blue { color: var(--cyan); }
-.mobile-nav-link-icon.gray { color: var(--text-muted); }
+.mobile-nav-link-icon.blue { color: var(--pink); }
+.mobile-nav-link-icon.gray { color: var(--text-gray); }
 .mobile-nav-link.active .mobile-nav-link-icon {
   color: var(--pink);
 }
@@ -1102,4 +1106,177 @@ body {
 .mobile-copyright {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+/* À ajouter dans votre fichier CSS global */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #eef2f6;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  color: #64748b;
+}
+
+.stat-icon.warning {
+  color: #f59e0b;
+}
+
+.stat-icon.info {
+  color: #3b82f6;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.stat-value.warning {
+  color: #f59e0b;
+}
+
+.stat-value.info {
+  color: #3b82f6;
+}
+
+.badge-restant {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.badge-restant.normal {
+  background: #84b8f3;
+  color: #2e7d32;
+}
+
+.badge-restant.alerte {
+  background: #84b8f3;
+  color: #f57c00;
+}
+
+.badge-restant.epuise {
+  background: #84b8f3;
+  color: #c62828;
+}
+
+.badge-qty.transfered {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-badge.normal {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.alerte {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-badge.epuise {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.location-badge {
+  padding: 0.25rem 0.5rem;
+  
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #e61089;
+}
+
+.location-badge.secondary {
+  
+  color: #e0f406;
+}
+
+.row-warning {
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.row-danger {
+  background-color: rgba(220, 38, 38, 0.05);
+}
+
+.legend-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #eef2f6;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-color.normal {
+  background: #e8f5e9;
+  border: 1px solid #2e7d32;
+}
+
+.legend-color.warning {
+  background: #fff3e0;
+  border: 1px solid #f57c00;
+}
+
+.legend-color.danger {
+  background: #ffebee;
+  border: 1px solid #c62828;
+}
+
+.legend-color.transfered {
+  background: #e3f2fd;
+  border: 1px solid #1976d2;
 }
