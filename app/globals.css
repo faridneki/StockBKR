@@ -266,7 +266,7 @@ body {
 }
 
 .cell-designation {
-  color: var(--purple);
+  color: #0894f1;
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1167,10 +1167,17 @@ body {
 }
 
 .badge-restant {
-  padding: 0.25rem 0.75rem;
+ /* padding: 0.25rem 0.25rem;
   border-radius: 20px;
   font-weight: 600;
   font-size: 0.9rem;
+   display: inline-block;*/
+  padding: 0.25rem 0.5rem;
+  background-color: #040506;
+  color: var(--green);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .badge-restant.normal {
@@ -1288,11 +1295,11 @@ body {
   left: 0;
   z-index: 10;
   background-color: inherit;
-  white-space: nowrap;        /* Empêche le retour à la ligne */
-  overflow: hidden;           /* Cache le débordement */
-  text-overflow: ellipsis;    /* Ajoute ... si le texte est trop long */
-  max-width: 150px;           /* Largeur maximale (ajustez selon besoin) */
-  min-width: 120px;           /* Largeur minimale */
+  /*white-space: nowrap;        /* Empêche le retour à la ligne */
+ /*overflow: hidden;           /* Cache le débordement */
+  /*text-overflow: ellipsis;    /* Ajoute ... si le texte est trop long */
+  /*max-width: 150px;           /* Largeur maximale (ajustez selon besoin) */
+  /*min-width: 120px;*/           /* Largeur minimale */
 }
 
 /* Pour l'en-tête */

@@ -34,13 +34,33 @@ model stk_at {
 }
 
 model utilisateurs {
-  id         Int       @id @default(autoincrement())
-  email      String    @unique(map: "emailUnique") @db.Char
-  nom        String?   @db.Char
-  prenom     String?   @db.Char
-  password   String    @db.Char
-  role       String    @default("user") @db.Char
-  actif      Boolean   @default(false)
-  created_at DateTime? @db.Date
-  updated_at DateTime? @db.Date
+  id           Int       @id @default(autoincrement())
+  email        String    @unique(map: "email") @db.VarChar(255)
+  nom          String?   @db.VarChar(100)
+  prenom       String?   @db.VarChar(100)
+  password     String    @db.VarChar(255)
+  role         String    @default("user") @db.VarChar(20)
+  actif        Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now())
+  maxSessions  Int       @default(2)
+  lastLoginAt  DateTime? @db.Date
+  lastLoginIp  String?   @db.VarChar
+  activeTokens String[]  @db.VarChar
+}
+
+model stock {
+  n            Int     @default(autoincrement())
+  Reference    String  @db.VarChar(15)
+  Designation  String? @db.VarChar(60)
+  Emplacement  String? @db.VarChar(10)
+  EnStock      String? @db.VarChar(1)
+  RefCategorie String? @db.VarChar(4)
+  PMatiere     Float?
+  Marge        Float?
+  Taxe         Float?
+  Quantite     Float?
+  Seuil        Float?
+
+  @@id([n, Reference])
 }

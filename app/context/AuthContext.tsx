@@ -1,6 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getSession, logoutUser, logoutAllDevices, getSessionCount } from '@/lib/auth';
+import { loginUser } from '@/lib/auth';
+import { toast } from 'react-toastify';
 
 interface User {
   id: number;
@@ -13,87 +17,114 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  sessionCount: number;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  logoutAllDevices: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshSessionCount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [sessionCount, setSessionCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include', // Important pour les cookies
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Erreur checkAuth:', error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const router = useRouter();
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const session = await getSession();
+      setUser(session);
+      if (session) {
+        const count = await getSessionCount();
+        setSessionCount(count);
+      }
+    } catch (error) {
+      setUser(null);
+      setSessionCount(0);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshSessionCount = async () => {
+    if (user) {
+      const count = await getSessionCount();
+      setSessionCount(count);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include', // Important pour les cookies
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setUser(data.user);
-        return { success: true };
-      } else {
-        return { success: false, error: data.error || 'Erreur de connexion' };
+      let ipAddress = 'unknown';
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        ipAddress = data.ip;
+      } catch (e) {
+        console.error('Impossible de récupérer IP:', e);
       }
+
+      const result = await loginUser(email, password, ipAddress);
+      
+      if (result.success && result.user) {
+        setUser(result.user);
+        const count = await getSessionCount();
+        setSessionCount(count);
+        toast.success('Connexion réussie');
+      } else {
+        toast.error(result.error || 'Erreur de connexion');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erreur login:', error);
-      return { success: false, error: 'Erreur réseau' };
+      return { success: false, error: 'Erreur de connexion' };
     }
   };
 
   const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', { 
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch (error) {
-      console.error('Erreur logout:', error);
-    }
+    await logoutUser();
     setUser(null);
+    setSessionCount(0);
+    toast.info('Déconnexion réussie');
+    router.push('/login');
+  };
+
+  const logoutAll = async () => {
+    await logoutAllDevices();
+    setUser(null);
+    setSessionCount(0);
+    toast.info('Déconnecté de tous les appareils');
+    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      sessionCount,
+      login, 
+      logout, 
+      logoutAllDevices: logoutAll, 
+      checkAuth,
+      refreshSessionCount
+    }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}

@@ -232,15 +232,18 @@ const StocksPage = () => {
   return (
     <Wrapper>
       <div className="stock-restant-page">
-        <div className="stock-header">
-          <h1 className="stock-title">
-            <Warehouse size={32} />
-            Vue sur Stock
-          </h1>
-          <p className="stock-subtitle">
-            {filteredStocks.length} Article(s) trouvé(s)
-          </p>
-        </div>
+         <div className="logo-wrapper">
+            
+              
+              
+                              
+                <span className="logo-subtitle"style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#50fa7b" }} >
+                  ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ
+                </span>
+                <span className="stock-subtitle" style={{ alignContent: "right" }}> {filteredStocks.length} Article(s) trouvé(s)</span>
+              </div>
+             
+            
 
         
 

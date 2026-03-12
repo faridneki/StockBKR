@@ -12,7 +12,8 @@ import {
   EyeOff, 
   ArrowRight,
   Warehouse,
-  ShieldCheck
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -75,7 +76,7 @@ export default function LoginPage() {
             {/* Message d'erreur */}
             {error && (
               <div className="login-error">
-                <ShieldCheck size={18} />
+                <AlertCircle size={18} />
                 <span>{error}</span>
               </div>
             )}
@@ -132,7 +133,7 @@ export default function LoginPage() {
                 <input type="checkbox" />
                 <span>Se souvenir de moi</span>
               </label>
-              <Link href="/forgot-password" className="login-forgot" style={{ color: "var(--green)" }}>
+              <Link href="/forgot-password" className="login-forgot"style={{ color: "#50fa7b" }}>
                 Mot de passe oublié ?
               </Link>
             </div>
@@ -157,11 +158,17 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Message sur la limitation de sessions */}
+          <div className="login-session-info">
+            <ShieldCheck size={16} />
+            <span>Maximum 2 sessions simultanées par compte</span>
+          </div>
+
           {/* Pied de page */}
-          <div className="login-footer">
+          <div className="login-footer" >
             <p>
               Pas encore de compte ?{' '}
-              <Link href="/register" className="login-link" style={{ color: "var(--green)" }} >
+              <Link href="/register" className="login-link"style={{ color: "#50fa7b" }}>
                 Créer un compte
               </Link>
             </p>
@@ -181,7 +188,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* CSS intégré */}
       <style jsx>{`
         .login-page {
           min-height: 100vh;
@@ -403,7 +409,7 @@ export default function LoginPage() {
         }
 
         .login-forgot {
-          color: #e4e1e8ff;
+          color: #f8f8f2;
           text-decoration: none;
           font-weight: 500;
           transition: color 0.2s ease;
@@ -454,6 +460,19 @@ export default function LoginPage() {
           to { transform: rotate(360deg); }
         }
 
+        .login-session-info {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          padding: 0.75rem;
+          background: rgba(189, 147, 249, 0.1);
+          border-radius: 8px;
+          color: #bd93f9;
+          font-size: 0.875rem;
+        }
+
         .login-footer {
           margin-top: 1.5rem;
           padding-top: 1.5rem;
@@ -468,7 +487,7 @@ export default function LoginPage() {
         }
 
         .login-link {
-          color: #ff79c6;
+          color: #80ff79ff;
           font-weight: 600;
           text-decoration: none;
           transition: color 0.2s ease;
