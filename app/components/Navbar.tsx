@@ -1,10 +1,20 @@
 "use client";
 
-import { LayoutDashboard, Atom, PackagePlus, Menu, X, LogOut, Car, Users, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import {
+  LayoutDashboard,
+  Atom,
+  PackagePlus,
+  Menu,
+  X,
+  LogOut,
+  Car,
+  Users,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const { user, logout, isLoading, sessionCount, logoutAllDevices } = useAuth();
@@ -21,12 +31,12 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   const handleLogoutAllDevices = async () => {
     await logoutAllDevices();
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   if (isLoading) {
@@ -78,33 +88,34 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
+   
       <div className="navbar-container">
+        
         <div className="navbar-inner">
-          
+         
           {/* Logo et Navigation Desktop */}
           <div className="navbar-brand">
+            
             <div className="logo-wrapper">
+              
               <div>
                 <Car style={{ textAlign: "left", color: "var(--green)" }} />
               </div>
               <div className="logo-text">
                 <span className="logo-title">Stock</span>
-                <span className="logo-subtitle">Réalisé par </span>                
+                <span className="logo-subtitle">Réalisé par </span>
               </div>
-              
-              <div className="logo-text">                
-                <span className="logo-subtitle">SARL Bekkour & CIE</span>                
+              <div className="logo-text">
+                <span className="logo-subtitle">SARL Bekkour & CIE</span>
                 <span className="stock-subtitle"> Farid Benazzouz </span>
               </div>
               <div>
                 <Car style={{ textAlign: "left", color: "var(--green)" }} />
               </div>
             </div>
-            
             {/* Navigation Desktop */}
             <div className="nav-desktop"></div>
           </div>
-
           {/* Côté droit */}
           <div className="navbar-right">
             {/* User menu desktop avec indicateur de sessions */}
@@ -120,24 +131,30 @@ const Navbar = () => {
                     <span>Sessions: {sessionCount}/2</span>
                   </div>
                 </div>
-                
+
                 {/* Menu déroulant pour les options de déconnexion */}
                 <div className="session-menu-container">
-                  <button 
+                  <button
                     onClick={() => setShowSessionMenu(!showSessionMenu)}
                     className="btn session-menu-btn"
                     title="Options de session"
                   >
                     <ShieldCheck size={18} />
                   </button>
-                  
+
                   {showSessionMenu && (
                     <div className="session-dropdown">
-                      <button onClick={handleLogout} className="session-dropdown-item">
+                      <button
+                        onClick={handleLogout}
+                        className="session-dropdown-item"
+                      >
                         <LogOut size={16} />
                         <span>Déconnexion</span>
                       </button>
-                      <button onClick={handleLogoutAllDevices} className="session-dropdown-item">
+                      <button
+                        onClick={handleLogoutAllDevices}
+                        className="session-dropdown-item"
+                      >
                         <Users size={16} />
                         <span>Déconnecter tous les appareils</span>
                       </button>
@@ -158,15 +175,13 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
       {/* Mobile overlay */}
-      <div 
-        className={`mobile-overlay ${menuOpen ? 'open' : ''}`}
+      <div
+        className={`mobile-overlay ${menuOpen ? "open" : ""}`}
         onClick={() => setMenuOpen(false)}
       />
-      
       {/* Mobile menu */}
-      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
+      <div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
         <div className="mobile-menu-header">
           <div className="mobile-menu-header-top">
             <div className="mobile-logo-wrapper">
@@ -182,7 +197,7 @@ const Navbar = () => {
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           <div className="mobile-user-info">
             <div className="mobile-user-details">
               <div className="mobile-user-name">
@@ -202,18 +217,18 @@ const Navbar = () => {
           <button
             onClick={handleLogout}
             className="nav-link mobile-logout-btn"
-            style={{ color: 'var(--red)' }}
+            style={{ color: "var(--red)" }}
           >
             <div className="nav-link-icon-wrapper">
               <LogOut className="nav-link-icon" />
             </div>
             <span>Déconnexion (cet appareil)</span>
           </button>
-          
+
           <button
             onClick={handleLogoutAllDevices}
             className="nav-link mobile-logout-all-btn"
-            style={{ color: 'var(--orange)' }}
+            style={{ color: "var(--orange)" }}
           >
             <div className="nav-link-icon-wrapper">
               <Users className="nav-link-icon" />
@@ -228,7 +243,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
       {/* Styles supplémentaires pour l'indicateur de sessions */}
       <style jsx>{`
         .session-indicator {

@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   TrendingDown,
   Package,
+  LogOut,
 } from "lucide-react";
 import Wrapper from "@/app/components/Wrapper";
 import { useAuth } from "@/app/context/AuthContext";
@@ -32,8 +33,8 @@ interface StockRestant {
   Quantite_stk_at: number;
   Quantite_restante: number;
   Seuil: number;
- Emplacement_bejaia: string | null;
-  Seuil_secondaire: number |  null;
+  Emplacement_bejaia: string | null;
+  Seuil_secondaire: number | null;
   Designation_at: string | null;
   EnStock_at: string | null;
 }
@@ -49,6 +50,7 @@ const StocksPage = () => {
   const [searchFilter, setSearchFilter] = useState<string>("tous");
   const [stockFilter, setStockFilter] = useState<string>("tous");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   const rowsPerPage = 10;
 
@@ -66,21 +68,58 @@ const StocksPage = () => {
     { value: "disponible", label: "Articles dispo Global" },
     { value: "epuise", label: "Articles Non dispo Global" },
     { value: "transfert", label: "Articles dispo Béjaia" },
-    
   ];
 
-  // Rediriger vers login si non authentifié
+  // Vérifier si l'utilisateur est toujours authentifié
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      setSessionError("Session expirée");
+    } else {
+      setSessionError(null);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading]);
+
+  // Rediriger vers login si non authentifié après un délai
+  useEffect(() => {
+    if (sessionError) {
+      const timer = setTimeout(() => {
+        router.push("/login");
+      }, 5000); // Redirection après 5 secondes
+      return () => clearTimeout(timer);
+    }
+  }, [sessionError, router]);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
+
+  const loadData = async () => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const data = await getStockRestant();
+      setStocks(data as any[]);
+      setFilteredStocks(data as any[]);
+    } catch (error: any) {
+      console.error("Erreur chargement stock restant:", error);
+      
+      // Si l'erreur est liée à l'authentification
+      if (error.message?.includes('token') || error.message?.includes('session')) {
+        setSessionError("Session expirée");
+      } else {
+        toast.error("Erreur lors du chargement des données");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = [...stocks];
@@ -128,7 +167,9 @@ const StocksPage = () => {
         filtered = filtered.filter((stock) => stock.Quantite_stk_at > 0);
         break;
       case "stockminbejaia":
-        filtered = filtered.filter((stock) => stock.Quantite_stk_at < stock.Seuil_bejaia !); 
+        filtered = filtered.filter((stock) => 
+          stock.Quantite_stk_at < (stock.Seuil_bejaia || 0)
+        ); 
         break;  
       default:
         break;
@@ -138,26 +179,52 @@ const StocksPage = () => {
     setCurrentPage(1);
   }, [searchTerm, searchFilter, stockFilter, stocks]);
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getStockRestant();
-      setStocks(data as any[]);
-      setFilteredStocks(data as any[]);
-    } catch (error) {
-      console.error("Erreur chargement stock restant:", error);
-      toast.error("Erreur lors du chargement des données");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const resetSearch = () => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
     setSearchTerm("");
     setSearchFilter("tous");
     setStockFilter("tous");
     setFilteredStocks(stocks);
     setCurrentPage(1);
+  };
+
+  const handleRefresh = () => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
+    loadData();
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
+    setSearchTerm(e.target.value);
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
+    setStockFilter(e.target.value);
+  };
+
+  const handleSearchFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
+    setSearchFilter(e.target.value);
+  };
+
+  const handleReconnect = () => {
+    router.push('/login');
   };
 
   const totalPages = Math.ceil(filteredStocks.length / rowsPerPage);
@@ -166,12 +233,20 @@ const StocksPage = () => {
   const displayedStocks = filteredStocks.slice(startIndex, endIndex);
 
   const goToNextPage = () => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
 
   const goToPreviousPage = () => {
+    if (!user) {
+      setSessionError("Session expirée");
+      return;
+    }
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
@@ -216,42 +291,79 @@ const StocksPage = () => {
   };
 
   // Afficher loading pendant la vérification auth
-  if (authLoading || !user) {
+  if (authLoading) {
     return (
       <Wrapper>
         <div className="loading-screen">
           <div className="loading-content">
             <RefreshCw className="spinner" />
-            <p className="loading-text">Chargement du stock restant...</p>
+            <p className="loading-text">Chargement...</p>
           </div>
         </div>
       </Wrapper>
     );
   }
 
+  // Afficher message d'erreur de session
+  if (sessionError) {
+    return (
+      <Wrapper>
+        <div className="session-error-container">
+          <div className="session-error-card">
+            <div className="session-error-icon">
+              <LogOut size={48} />
+            </div>
+            <h2 className="session-error-title">Session déconnectée</h2>
+            <p className="session-error-message">
+              {sessionError}
+            </p>
+            <p className="session-error-description">
+              Votre session a expiré. Redirection vers la page de connexion dans 5 secondes...
+            </p>
+            <button onClick={handleReconnect} className="session-error-button">
+              Se reconnecter maintenant
+            </button>
+          </div>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  // Si pas d'utilisateur, ne rien afficher (la redirection se fera)
+  if (!user) {
+    return null;
+  }
+
   return (
     <Wrapper>
       <div className="stock-restant-page">
-         <div className="logo-wrapper">
-            
-              
-              
-                              
-                <span className="logo-subtitle"style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#50fa7b" }} >
-                  ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ
-                </span>
-                <span className="stock-subtitle" style={{ alignContent: "right" }}> {filteredStocks.length} Article(s) trouvé(s)</span>
-              </div>
-             
-            
+       
 
-        
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          
+          
+          <div className="stat-card">
+            
+            <div className="stat-info">
+              
+              <span className="stat-value warning">ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
+            </div>
+          </div>
+          <div className="stat-card">
+           
+            <div className="stat-info">
+              
+              <span className="stat-value info">{filteredStocks.length} Article(s)</span>
+            </div>
+          </div>
+        </div>
 
         <div className="search-bar">
           <div className="search-row">
             <select
               value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
+              onChange={handleSearchFilterChange}
               className="search-select"
             >
               {searchOptions.map((option) => (
@@ -267,7 +379,7 @@ const StocksPage = () => {
                 type="text"
                 placeholder="Rechercher..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearch}
                 className="search-input"
               />
               {searchTerm && (
@@ -279,7 +391,7 @@ const StocksPage = () => {
 
             <select
               value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value)}
+              onChange={handleFilterChange}
               className="search-select filter-select"
             >
               {filterOptions.map((option) => (
@@ -289,8 +401,8 @@ const StocksPage = () => {
               ))}
             </select>
 
-            <button onClick={loadData} className="btn">
-              <RefreshCw size={16} />
+            <button onClick={handleRefresh} className="btn" disabled={isLoading}>
+              <RefreshCw size={16} className={isLoading ? "spinner" : ""} />
               Actualiser
             </button>
           </div>
@@ -302,20 +414,20 @@ const StocksPage = () => {
               <thead>
                 <tr>
                   <th style={{ textAlign: "center", color: "var(--red)", fontWeight: "bold" }}>
-                  Référence</th>
+                    Référence
+                  </th>
                   <th style={{ textAlign: "center", color: "var(--purple)" }}>
-                    Désignation</th>
+                    Désignation
+                  </th>
                   <th style={{ textAlign: "center", color: "var(--blue)" }}>
                     Qté Globale
                   </th>
-                   <th style={{ textAlign: "center", color: "var(--green)" }}>
+                  <th style={{ textAlign: "center", color: "var(--green)" }}>
                     Qté Takarietz
                   </th>
                   <th style={{ textAlign: "center", color: "var(--orange)" }}>
                     Qté Béjaia
                   </th>
-                 
-                  
                   <th style={{ textAlign: "center", color: "#e61089" }}>Takarietz Loc.</th>
                   <th style={{ textAlign: "center", color: "#e0f406" }}>Béjaia Loc.</th>                 
                   <th style={{ textAlign: "right", color: "var(--green)" }}>
@@ -328,7 +440,16 @@ const StocksPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {displayedStocks.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={10}>
+                      <div className="loading-state">
+                        <RefreshCw className="spinner" size={32} />
+                        <p>Chargement des données...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : displayedStocks.length > 0 ? (
                   displayedStocks.map((stock) => {
                     const prixHT = calculerPrixHT(stock.PMatiere, stock.Marge);
                     const prixTTC = calculerPrixTTC(prixHT, stock.Taxe);
@@ -358,15 +479,12 @@ const StocksPage = () => {
                         >
                           {stock.Designation || "-"}
                         </td>
-                         <td className="cell-qty" >
+                        <td className="cell-qty">
                           <span className="badge-qty">
                             {stock.Quantite_stock || 0}
                           </span>
                         </td>
-                         <td
-                          className="cell-qty-restant"
-                          style={{ textAlign: "center" }}
-                        >
+                        <td className="cell-qty-restant" style={{ textAlign: "center" }}>
                           <span
                             className={`badge-restant ${status.class}`}
                             title={`Seuil: ${stock.Seuil}`}
@@ -374,8 +492,6 @@ const StocksPage = () => {
                             {stock.Quantite_restante || 0}
                           </span>
                         </td>
-
-
                         <td className="cell-qty-at" style={{ textAlign: "center" }}>
                           <span
                             className={`badge-qty ${stock.Quantite_stk_at > 0 ? "transfered" : ""}`}
@@ -383,8 +499,6 @@ const StocksPage = () => {
                             {stock.Quantite_stk_at || 0}
                           </span>
                         </td>
-                       
-                        
                         <td style={{ textAlign: "center" }}>
                           <span className="location-badge">
                             {stock.Emplacement_principal || "-"}
@@ -395,7 +509,6 @@ const StocksPage = () => {
                             {stock.Emplacement_bejaia || "-"}
                           </span>
                         </td>
-                       
                         <td className="cell-price-ht">
                           {formatPrix(prixHT || 0)}
                         </td>
@@ -414,7 +527,7 @@ const StocksPage = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={13}>
+                    <td colSpan={10}>
                       <div className="empty-state">
                         <Search className="empty-icon" />
                         <p className="empty-title">Aucun article trouvé</p>
@@ -439,7 +552,7 @@ const StocksPage = () => {
               <div className="pagination-nav">
                 <button
                   onClick={goToPreviousPage}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                   className="page-btn"
                 >
                   <ChevronLeft size={20} />
@@ -449,7 +562,7 @@ const StocksPage = () => {
                 </span>
                 <button
                   onClick={goToNextPage}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                   className="page-btn"
                 >
                   <ChevronRight size={20} />
@@ -458,9 +571,90 @@ const StocksPage = () => {
             </div>
           )}
         </div>
-
-        
       </div>
+
+      <style jsx>{`
+        .session-error-container {
+          min-height: 80vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+
+        .session-error-card {
+          background: var(--bg-secondary);
+          border-radius: 16px;
+          padding: 3rem;
+          text-align: center;
+          max-width: 500px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border-color);
+        }
+
+        .session-error-icon {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 1.5rem;
+          background: rgba(255, 85, 85, 0.1);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--red);
+        }
+
+        .session-error-title {
+          font-size: 1.5rem;
+          color: var(--red);
+          margin-bottom: 1rem;
+        }
+
+        .session-error-message {
+          color: var(--text-primary);
+          font-size: 1.1rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .session-error-description {
+          color: var(--text-muted);
+          margin-bottom: 2rem;
+        }
+
+        .session-error-button {
+          background: linear-gradient(135deg, var(--red) 0%, var(--pink) 100%);
+          color: white;
+          border: none;
+          padding: 0.75rem 2rem;
+          border-radius: 8px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .session-error-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(255, 85, 85, 0.3);
+        }
+
+        .loading-state {
+          text-align: center;
+          padding: 3rem;
+          color: var(--text-muted);
+        }
+
+        .loading-state .spinner {
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+          color: var(--pink);
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </Wrapper>
   );
 };

@@ -1,7 +1,7 @@
 {
-  "name": "StockBKR - Gestion de Stock",
+  "name": "StockBKR - Vue sur Stock",
   "short_name": "StockBKR",
-  "description": "Application de gestion de stock professionnelle",
+  "description": "Application de visualisation stock",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

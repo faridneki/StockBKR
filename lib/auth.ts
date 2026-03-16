@@ -294,3 +294,45 @@ export async function getSessionCount(): Promise<number> {
     return 0;
   }
 }
+// app/actions/auth.ts - Ajoutez cette fonction
+export async function isSessionActive(): Promise<{ 
+  active: boolean; 
+  session?: UserSession; 
+  reason?: string 
+}> {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('auth-token')?.value
+
+    if (!token) {
+      return { active: false, reason: 'Aucun token trouvé' }
+    }
+
+    const session = await verifyToken(token)
+    if (!session) {
+      return { active: false, reason: 'Token invalide ou expiré' }
+    }
+
+    const user = await prisma.utilisateurs.findUnique({
+      where: { id: session.id },
+      select: { 
+        activeTokens: true,
+        actif: true 
+      }
+    })
+
+    if (!user || !user.actif) {
+      return { active: false, reason: 'Utilisateur non trouvé ou inactif' }
+    }
+
+    if (!user.activeTokens?.includes(token)) {
+      return { active: false, reason: 'Session révoquée' }
+    }
+
+    return { active: true, session }
+
+  } catch (error) {
+    console.error('Erreur vérification session:', error)
+    return { active: false, reason: 'Erreur de vérification' }
+  }
+}
