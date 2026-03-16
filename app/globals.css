@@ -464,10 +464,9 @@ body {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 5rem;
+  gap: 1rem;
   margin-bottom: 1.5rem;
-  gap: 5rem;
-  margin: 20px 0;
+  margin: 10px 0;
 }
 
 .stat-card {
@@ -496,6 +495,8 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-primary);
+  margin-left: 20px;
+  align-items: center;
 }
 
 .stat-value.success { color: var(--green); }

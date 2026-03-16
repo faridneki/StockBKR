@@ -343,18 +343,17 @@ const StocksPage = () => {
         <div className="stats-grid">
           
           
-          <div className="stat-card">
+         {/* <div className="stat-card">
             
-            <div className="stat-info">
-              
+            <div className="stat-info">              
               <span className="stat-value warning">ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
             </div>
-          </div>
+          </div>*/}
           <div className="stat-card">
            
             <div className="stat-info">
               
-              <span className="stat-value info">{filteredStocks.length} Article(s)</span>
+              <span className="stat-value info">{filteredStocks.length} Article(s) trouvé(s)</span>
             </div>
           </div>
         </div>
@@ -405,6 +404,9 @@ const StocksPage = () => {
               <RefreshCw size={16} className={isLoading ? "spinner" : ""} />
               Actualiser
             </button>
+            <div className="stat-info">              
+              <span className="stat-value warning">ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
+            </div>
           </div>
         </div>
 
