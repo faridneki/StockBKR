@@ -1,5 +1,7 @@
 "use client";
-
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { FileSpreadsheet } from 'lucide-react';
 import React, { useEffect, useState } from "react";
 import {
   Search,
@@ -289,7 +291,62 @@ const StocksPage = () => {
     transferes: stocks.filter((s) => s.Quantite_stk_at > 0).length,
     quantiteTotale: stocks.reduce((acc, s) => acc + s.Quantite_restante, 0),
   };
+const exportToExcel = () => {
+  try {
+    if (filteredStocks.length === 0) {
+      toast.warning("Aucune donnée à exporter");
+      return;
+    }
 
+    // Préparer les données pour Excel
+    const excelData = filteredStocks.map((stock, index) => ({
+      'N°': index + 1,
+      'Référence': stock.Reference || '',
+      'Désignation': stock.Designation || '',
+      'Qté Globale': stock.Quantite_stock || 0,
+      'Qté Takarietz': stock.Quantite_restante || 0,
+      'Qté Béjaia': stock.Quantite_stk_at || 0,
+      'Localisation Takarietz': stock.Emplacement_principal || '-',
+      
+    }));
+
+    // Créer le workbook et la worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajuster la largeur des colonnes
+    const colWidths = [
+      { wch: 5 },   // N°
+      { wch: 15 },  // Référence
+      { wch: 40 },  // Désignation
+      { wch: 10 },  // Qté Globale
+      { wch: 12 },  // Qté Takarietz
+      { wch: 10 },  // Qté Béjaia
+      { wch: 18 },  // Localisation Takarietz
+     
+    ];
+    ws['!cols'] = colWidths;
+
+    // Ajouter la worksheet au workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Stock');
+
+    // Générer le fichier Excel
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Nom du fichier avec la date
+    const date = new Date().toISOString().split('T')[0];
+    const fileName = `stock_${date}_${filteredStocks.length}_articles.xlsx`;
+    
+    // Sauvegarder le fichier
+    saveAs(data, fileName);
+    
+    toast.success(`${filteredStocks.length} articles exportés avec succès`);
+  } catch (error) {
+    console.error("Erreur export Excel:", error);
+    toast.error("Erreur lors de l'export Excel");
+  }
+};
   // Afficher loading pendant la vérification auth
   if (authLoading) {
     return (
@@ -343,12 +400,12 @@ const StocksPage = () => {
         <div className="stats-grid">
           
           
-         {/* <div className="stat-card">
+         <div className="stat-card">
             
             <div className="stat-info">              
               <span className="stat-value warning">ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
             </div>
-          </div>*/}
+          </div>
           <div className="stat-card">
            
             <div className="stat-info">
@@ -360,54 +417,57 @@ const StocksPage = () => {
 
         <div className="search-bar">
           <div className="search-row">
-            <select
-              value={searchFilter}
-              onChange={handleSearchFilterChange}
-              className="search-select"
-            >
-              {searchOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+  <select
+    value={searchFilter}
+    onChange={(e) => setSearchFilter(e.target.value)}
+    className="search-select"
+  >
+    {searchOptions.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
 
-            <div className="search-wrapper">
-              <Search className="search-icon" />
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="search-input"
-              />
-              {searchTerm && (
-                <button onClick={resetSearch} className="search-clear">
-                  <X size={20} />
-                </button>
-              )}
-            </div>
+  <div className="search-wrapper">
+    <Search className="search-icon" />
+    <input
+      type="text"
+      placeholder="Rechercher..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="search-input"
+    />
+    {searchTerm && (
+      <button onClick={resetSearch} className="search-clear">
+        <X size={20} />
+      </button>
+    )}
+  </div>
 
-            <select
-              value={stockFilter}
-              onChange={handleFilterChange}
-              className="search-select filter-select"
-            >
-              {filterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+  <select
+    value={stockFilter}
+    onChange={(e) => setStockFilter(e.target.value)}
+    className="search-select filter-select"
+  >
+    {filterOptions.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
 
-            <button onClick={handleRefresh} className="btn" disabled={isLoading}>
-              <RefreshCw size={16} />
-              Actualiser
-            </button>
-            <div className="stat-info">              
-              <span className="stat-value warning">ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
-            </div>
-          </div>
+  <button onClick={loadData} className="btn">
+    <RefreshCw size={16} />
+    Actualiser
+  </button>
+
+  {/* Nouveau bouton Excel */}
+  <button onClick={exportToExcel} className="btn btn-excel">
+    <FileSpreadsheet size={16} />
+    Excel
+  </button>
+</div>
         </div>
 
         <div className="table-container">

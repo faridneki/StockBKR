@@ -52,7 +52,7 @@ const Navbar = () => {
               <div className="logo-text">
                 <span className="logo-title">Stock</span>
                 <span className="logo-subtitle">Réalisé par </span>
-                <span className="stock-subtitle"> Farid Ben </span>
+                <span className="stock-subtitle"> Farid Benazzouz </span>
               </div>
             </div>
           </div>
