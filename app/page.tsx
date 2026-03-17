@@ -401,7 +401,7 @@ const StocksPage = () => {
             </select>
 
             <button onClick={handleRefresh} className="btn" disabled={isLoading}>
-              <RefreshCw size={16} className={isLoading ? "spinner" : ""} />
+              <RefreshCw size={16} />
               Actualiser
             </button>
             <div className="stat-info">              

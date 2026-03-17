@@ -10,6 +10,7 @@ import {
   Car,
   Users,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -88,16 +89,11 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-   
       <div className="navbar-container">
-        
         <div className="navbar-inner">
-         
           {/* Logo et Navigation Desktop */}
           <div className="navbar-brand">
-            
             <div className="logo-wrapper">
-              
               <div>
                 <Car style={{ textAlign: "left", color: "var(--green)" }} />
               </div>
@@ -113,9 +109,25 @@ const Navbar = () => {
                 <Car style={{ textAlign: "left", color: "var(--green)" }} />
               </div>
             </div>
+
             {/* Navigation Desktop */}
-            <div className="nav-desktop"></div>
+            <div className="nav-desktop">
+              {/* Lien Administration - Visible uniquement pour les admins */}
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin/users"
+                  className={`nav-link ${pathname.startsWith("/admin") ? "active" : ""}`}
+                  title="Gestion des utilisateurs"
+                >
+                  <div className="nav-link-icon-wrapper">
+                    <UserCog className="nav-link-icon admin" />
+                  </div>
+                  <span className="nav-link-text">Administration</span>
+                </Link>
+              )}
+            </div>
           </div>
+
           {/* Côté droit */}
           <div className="navbar-right">
             {/* User menu desktop avec indicateur de sessions */}
@@ -149,7 +161,7 @@ const Navbar = () => {
                         className="session-dropdown-item"
                       >
                         <LogOut size={16} />
-                        <span>Déconnexion</span>
+                        <span>Déconnexion (cet appareil)</span>
                       </button>
                       <button
                         onClick={handleLogoutAllDevices}
@@ -175,11 +187,13 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
       {/* Mobile overlay */}
       <div
         className={`mobile-overlay ${menuOpen ? "open" : ""}`}
         onClick={() => setMenuOpen(false)}
       />
+
       {/* Mobile menu */}
       <div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
         <div className="mobile-menu-header">
@@ -213,6 +227,20 @@ const Navbar = () => {
         </div>
 
         <div className="mobile-nav-links">
+          {/* Lien Administration pour mobile - Visible uniquement pour les admins */}
+          {user?.role === "admin" && (
+            <Link
+              href="/admin/users"
+              className={`mobile-nav-link ${pathname.startsWith("/admin") ? "active" : ""}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              <div className="mobile-nav-link-icon-wrapper">
+                <UserCog className="mobile-nav-link-icon admin" />
+              </div>
+              <span>Administration</span>
+            </Link>
+          )}
+
           {/* Options de déconnexion pour mobile */}
           <button
             onClick={handleLogout}
@@ -243,7 +271,8 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-      {/* Styles supplémentaires pour l'indicateur de sessions */}
+
+      {/* Styles supplémentaires */}
       <style jsx>{`
         .session-indicator {
           display: flex;
@@ -355,6 +384,23 @@ const Navbar = () => {
 
         .mobile-logout-all-btn:hover {
           background: rgba(255, 184, 108, 0.1);
+        }
+
+        /* Styles pour le lien admin */
+        .nav-link-icon.admin {
+          color: var(--yellow);
+        }
+
+        .nav-link.active .nav-link-icon.admin {
+          color: var(--pink);
+        }
+
+        .mobile-nav-link-icon.admin {
+          color: var(--yellow);
+        }
+
+        .mobile-nav-link.active .mobile-nav-link-icon.admin {
+          color: var(--pink);
         }
       `}</style>
     </nav>
