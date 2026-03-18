@@ -465,7 +465,7 @@ const exportToExcel = () => {
   {/* Nouveau bouton Excel */}
   <button onClick={exportToExcel} className="btn btn-excel">
     <FileSpreadsheet size={16} />
-    Excel
+    Tableau vers Excel
   </button>
 </div>
         </div>

@@ -15,7 +15,7 @@ import {
   Calendar,
   UserCog,
   ArrowLeft,
-  Home,
+  LogOut,
 } from "lucide-react";
 import Wrapper from "@/app/components/Wrapper";
 import { useAuth } from "@/app/context/AuthContext";
@@ -29,6 +29,7 @@ import {
   toggleUserStatus,
   deleteUser,
   changeUserRole,
+  disconnectUserSessions,
 } from "@/app/actions/admin";
 
 interface Utilisateur {
@@ -59,6 +60,7 @@ const AdminUsersPage = () => {
 
   const rowsPerPage = 10;
 
+  // Vérifier les droits d'accès
   useEffect(() => {
     if (!authLoading && (!user || user.role !== "admin")) {
       router.push("/");
@@ -66,6 +68,7 @@ const AdminUsersPage = () => {
     }
   }, [user, authLoading, router]);
 
+  // Charger les utilisateurs
   useEffect(() => {
     if (user?.role === "admin") {
       loadUsers();
@@ -89,6 +92,7 @@ const AdminUsersPage = () => {
     }
   };
 
+  // Filtres
   useEffect(() => {
     let filtered = [...users];
 
@@ -116,6 +120,7 @@ const AdminUsersPage = () => {
     setCurrentPage(1);
   }, [searchTerm, filterRole, filterStatus, users]);
 
+  // Activer/Désactiver un utilisateur
   const handleToggleStatus = async (userId: number, currentStatus: boolean) => {
     try {
       const result = await toggleUserStatus(userId, !currentStatus);
@@ -134,8 +139,9 @@ const AdminUsersPage = () => {
     }
   };
 
+  // Supprimer un utilisateur
   const handleDelete = async (userId: number, userEmail: string) => {
-    if (!confirm(`Supprimer l'utilisateur ${userEmail} ?`)) return;
+    if (!confirm(`⚠️ Supprimer définitivement l'utilisateur ${userEmail} ?\nCette action est irréversible.`)) return;
 
     try {
       const result = await deleteUser(userId);
@@ -150,6 +156,7 @@ const AdminUsersPage = () => {
     }
   };
 
+  // Changer le rôle d'un utilisateur
   const handleChangeRole = async (userId: number, newRole: string) => {
     try {
       const result = await changeUserRole(userId, newRole);
@@ -163,6 +170,46 @@ const AdminUsersPage = () => {
       }
     } catch (error) {
       toast.error("Erreur lors de la modification");
+    }
+  };
+
+  // Déconnecter les sessions d'un utilisateur
+  const handleDisconnectSessions = async (userId: number, userEmail: string, isSelf: boolean) => {
+    const userSessions = users.find(u => u.id === userId)?.activeTokens?.length || 0;
+    
+    if (userSessions === 0) {
+      toast.info("Cet utilisateur n'a aucune session active");
+      return;
+    }
+
+    const message = isSelf 
+      ? "🔐 Vous allez déconnecter VOS PROPRES sessions.\nVous serez déconnecté de tous vos appareils et devrez vous reconnecter.\n\nContinuer ?"
+      : `🔐 Déconnecter toutes les sessions de ${userEmail} ?\nIl sera déconnecté de tous ses appareils.`;
+
+    if (!confirm(message)) return;
+
+    try {
+      const result = await disconnectUserSessions(userId);
+      if (result.success) {
+        setUsers(
+          users.map((u) =>
+            u.id === userId ? { ...u, activeTokens: [] } : u
+          )
+        );
+        toast.success(`Sessions ${isSelf ? "de l'administrateur" : `de ${userEmail}`} déconnectées`);
+        
+        // Si l'admin se déconnecte lui-même, redirection après 2 secondes
+        if (isSelf) {
+          toast.info("Redirection vers la page de connexion dans 2 secondes...");
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+        }
+      } else {
+        toast.error(result.error || "Erreur");
+      }
+    } catch (error) {
+      toast.error("Erreur lors de la déconnexion");
     }
   };
 
@@ -187,14 +234,14 @@ const AdminUsersPage = () => {
   return (
     <Wrapper>
       <div className="admin-users-page">
-        {/* En-tête avec bouton de retour */}
+        {/* En-tête avec bouton de retour élégant */}
         <div className="page-header">
           <div className="header-top">
-  <Link href="/" className="back-button">
-    <ArrowLeft size={18} />
-    <span>Accueil</span>
-  </Link>
-</div>
+            <Link href="/" className="back-button">
+              <ArrowLeft size={18} />
+              <span>Accueil</span>
+            </Link>
+          </div>
           
           <div className="header-title">
             <h1 className="page-title">
@@ -262,13 +309,13 @@ const AdminUsersPage = () => {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th>Nom complet</th>
                   <th>Email</th>
-                  <th>Nom</th>
-                  <th>Prénom</th>
                   <th>Rôle</th>
                   <th>Statut</th>
                   <th>Sessions</th>
                   <th>Dernière connexion</th>
+                  <th>IP</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -283,73 +330,119 @@ const AdminUsersPage = () => {
                     </td>
                   </tr>
                 ) : displayedUsers.length > 0 ? (
-                  displayedUsers.map((u) => (
-                    <tr key={u.id}>
-                      <td>
-                        <div className="cell-with-icon">
-                          <Mail size={14} />
-                          {u.email}
-                        </div>
-                      </td>
-                      <td>{u.nom || "-"}</td>
-                      <td>{u.prenom || "-"}</td>
-                      <td>
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleChangeRole(u.id, e.target.value)}
-                          className="role-select"
-                          disabled={u.id === user?.id}
-                          title={u.id === user?.id ? "Vous ne pouvez pas modifier votre propre rôle" : ""}
-                        >
-                          <option value="user">User</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${u.actif ? "active" : "inactive"}`}>
-                          {u.actif ? "Actif" : "Inactif"}
-                        </span>
-                      </td>
-                      <td className="sessions-cell">
-                        <span className={`sessions-count ${(u.activeTokens?.length || 0) >= u.maxSessions ? "full" : ""}`}>
-                          {u.activeTokens?.length || 0}/{u.maxSessions}
-                        </span>
-                      </td>
-                      <td>
-                        {u.lastLoginAt ? (
-                          <div className="last-login">
-                            <Calendar size={12} />
-                            <span>{new Date(u.lastLoginAt).toLocaleDateString()}</span>
-                            {u.lastLoginIp && (
-                              <small className="login-ip">{u.lastLoginIp}</small>
+                  displayedUsers.map((u) => {
+                    const isSelf = u.id === user?.id;
+                    const hasActiveSessions = (u.activeTokens?.length || 0) > 0;
+                    const nomComplet = [u.nom, u.prenom].filter(Boolean).join(' ') || '—';
+                    
+                    return (
+                      <tr key={u.id} className={isSelf ? "current-user" : ""}>
+                        {/* Colonne Nom complet (fixée en premier) */}
+                        <td>
+                          <div className="cell-with-icon">
+                            <UserCog size={14} />
+                            <span className="nom-complet">{nomComplet}</span>
+                            {isSelf && (
+                              <span className="self-badge">Moi</span>
                             )}
                           </div>
-                        ) : (
-                          <span className="never-login">Jamais connecté</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          <button
-                            onClick={() => handleToggleStatus(u.id, u.actif)}
-                            className={`action-btn ${u.actif ? "warning" : "success"}`}
-                            title={u.actif ? "Désactiver" : "Activer"}
-                            disabled={u.id === user?.id}
+                        </td>
+                        
+                        {/* Colonne Email */}
+                        <td>
+                          <div className="cell-with-icon">
+                            <Mail size={14} />
+                            <span className="email">{u.email}</span>
+                          </div>
+                        </td>
+                        
+                        {/* Colonne Rôle */}
+                        <td>
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleChangeRole(u.id, e.target.value)}
+                            className="role-select"
+                            disabled={isSelf}
+                            title={isSelf ? "Vous ne pouvez pas modifier votre propre rôle" : ""}
                           >
-                            {u.actif ? <PowerOff size={16} /> : <Power size={16} />}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(u.id, u.email)}
-                            className="action-btn danger"
-                            title="Supprimer"
-                            disabled={u.id === user?.id}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                        
+                        {/* Colonne Statut */}
+                        <td>
+                          <span className={`status-badge ${u.actif ? "active" : "inactive"}`}>
+                            {u.actif ? "Actif" : "Inactif"}
+                          </span>
+                        </td>
+                        
+                        {/* Colonne Sessions */}
+                        <td className="sessions-cell">
+                          <span className={`sessions-count ${hasActiveSessions ? "active" : ""} ${(u.activeTokens?.length || 0) >= u.maxSessions ? "full" : ""}`}>
+                            {u.activeTokens?.length || 0}/{u.maxSessions}
+                            <span className={`active-indicator ${hasActiveSessions ? "" : "inactive"}`} />
+                          </span>
+                        </td>
+                        
+                        {/* Colonne Dernière connexion */}
+                        <td>
+                          {u.lastLoginAt ? (
+                            <div className="last-login">
+                              <Calendar size={12} />
+                              <span>{new Date(u.lastLoginAt).toLocaleDateString()}</span>
+                            </div>
+                          ) : (
+                            <span className="never-login">Jamais</span>
+                          )}
+                        </td>
+                        
+                        {/* Colonne IP */}
+                        <td>
+                          {u.lastLoginIp ? (
+                            <span className="login-ip">{u.lastLoginIp}</span>
+                          ) : (
+                            <span className="never-login">—</span>
+                          )}
+                        </td>
+                        
+                        {/* Colonne Actions */}
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              onClick={() => handleToggleStatus(u.id, u.actif)}
+                              className={`action-btn ${u.actif ? "warning" : "success"}`}
+                              title={u.actif ? "Désactiver" : "Activer"}
+                              disabled={isSelf}
+                            >
+                              {u.actif ? <PowerOff size={16} /> : <Power size={16} />}
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDisconnectSessions(u.id, u.email, isSelf)}
+                              className={`action-btn disconnect ${!hasActiveSessions ? "disabled" : ""}`}
+                              title={hasActiveSessions 
+                                ? (isSelf ? "Déconnecter mes sessions" : "Déconnecter toutes les sessions")
+                                : "Aucune session active"
+                              }
+                              disabled={!hasActiveSessions}
+                            >
+                              <LogOut size={16} />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDelete(u.id, u.email)}
+                              className="action-btn danger"
+                              title="Supprimer définitivement"
+                              disabled={isSelf}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={8}>
@@ -409,27 +502,39 @@ const AdminUsersPage = () => {
         }
 
         .header-top {
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
         }
 
         .back-button {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: #eb1765ff;
-          color: #8be9fd;
-          border: 1px solid #eb5e17ff;
-          border-radius: 8px;
+          padding: 0.6rem 1.2rem;
+          background: var(--bg-secondary);
+          color: var(--text-primary);
+          border: 1px solid var(--border-color);
+          border-radius: 30px;
           text-decoration: none;
           font-size: 0.9rem;
+          font-weight: 500;
           transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .back-button:hover {
-          background: var(--bg-tertiary);
-          color: #f8f8f2;
-          transform: translateX(-2px);
+          background: linear-gradient(135deg, var(--pink), var(--purple));
+          color: white;
+          border-color: transparent;
+          transform: translateX(-3px);
+          box-shadow: 0 4px 12px rgba(255, 121, 198, 0.3);
+        }
+
+        .back-button svg {
+          transition: transform 0.2s ease;
+        }
+
+        .back-button:hover svg {
+          transform: translateX(-3px);
         }
 
         .header-title {
@@ -604,10 +709,34 @@ const AdminUsersPage = () => {
           background: var(--bg-hover);
         }
 
+        .current-user {
+          background: rgba(255, 121, 198, 0.05);
+          border-left: 3px solid var(--pink);
+        }
+
         .cell-with-icon {
           display: flex;
           align-items: center;
           gap: 0.5rem;
+        }
+
+        .nom-complet {
+          font-weight: 500;
+          color: var(--text-primary);
+        }
+
+        .email {
+          color: var(--purple);
+          font-size: 0.85rem;
+        }
+
+        .self-badge {
+          font-size: 0.7rem;
+          padding: 0.15rem 0.4rem;
+          background: var(--pink);
+          color: var(--bg-primary);
+          border-radius: 12px;
+          font-weight: 600;
         }
 
         .role-select {
@@ -652,28 +781,49 @@ const AdminUsersPage = () => {
         }
 
         .sessions-count {
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
           padding: 0.25rem 0.5rem;
           background: var(--bg-tertiary);
-          border-radius: 4px;
+          border-radius: 20px;
           font-size: 0.75rem;
           font-weight: 600;
+        }
+
+        .sessions-count.active {
+          background: rgba(80, 250, 123, 0.15);
         }
 
         .sessions-count.full {
           color: var(--yellow);
         }
 
+        .active-indicator {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--green);
+          display: inline-block;
+          box-shadow: 0 0 5px var(--green);
+        }
+
+        .active-indicator.inactive {
+          background: var(--text-muted);
+          box-shadow: none;
+        }
+
         .last-login {
           display: flex;
-          flex-direction: column;
+          align-items: center;
           gap: 0.25rem;
           font-size: 0.8rem;
         }
 
         .login-ip {
-          color: var(--text-muted);
-          font-size: 0.7rem;
+          color: var(--purple);
+          font-size: 0.8rem;
+          font-family: monospace;
         }
 
         .never-login {
@@ -720,6 +870,16 @@ const AdminUsersPage = () => {
           color: var(--red);
         }
 
+        .action-btn.disconnect {
+          color: var(--purple);
+        }
+
+        .action-btn.disconnect:hover:not(:disabled) {
+          background: rgba(189, 147, 249, 0.2);
+          color: var(--purple);
+        }
+
+        .action-btn.disabled,
         .action-btn:disabled {
           opacity: 0.3;
           cursor: not-allowed;

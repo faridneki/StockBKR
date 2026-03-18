@@ -1389,3 +1389,53 @@ gap: 0.25rem;
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(197, 180, 247, 0.2);
 }
+
+.action-btn.disconnect {
+  color: var(--purple);
+}
+
+.action-btn.disconnect:hover:not(:disabled) {
+  background: rgba(189, 147, 249, 0.2);
+  color: var(--purple);
+}
+
+.action-btn.disconnect:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Amélioration de l'affichage des sessions */
+.sessions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.sessions-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sessions-count.full {
+  color: var(--yellow);
+}
+
+.sessions-count .active-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+  margin-left: 0.25rem;
+}
+
+.sessions-count .active-indicator.inactive {
+  background: var(--text-muted);
+}

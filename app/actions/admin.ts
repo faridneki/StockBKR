@@ -109,3 +109,31 @@ export async function changeUserRole(userId: number, role: string) {
     return { success: false, error: 'Erreur serveur' }
   }
 }
+export async function disconnectUserSessions(userId: number) {
+  try {
+    const session = await getSession()
+    
+    if (!session || session.role !== 'admin') {
+      return { success: false, error: 'Non autorisé' }
+    }
+
+    // Empêcher l'admin de se déconnecter lui-même
+    if (userId === session.id) {
+      return { success: false, error: 'Vous ne pouvez pas déconnecter vos propres sessions' }
+    }
+
+    // Réinitialiser les tokens actifs de l'utilisateur
+    await prisma.utilisateurs.update({
+      where: { id: userId },
+      data: { 
+        activeTokens: [],
+        lastLoginAt: null // Optionnel : réinitialiser aussi la dernière connexion
+      }
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Erreur disconnectUserSessions:', error)
+    return { success: false, error: 'Erreur serveur' }
+  }
+}
