@@ -492,9 +492,7 @@ const exportToExcel = () => {
                   </th>
                   <th style={{ textAlign: "center", color: "#e61089" }}>Takarietz Loc.</th>
                   <th style={{ textAlign: "center", color: "#e0f406" }}>Béjaia Loc.</th>                 
-                  <th style={{ textAlign: "right", color: "var(--green)" }}>
-                    Prix HT
-                  </th>
+                  
                   <th style={{ textAlign: "right", color: "#e61089" }}>
                     Prix TTC
                   </th>
@@ -571,9 +569,7 @@ const exportToExcel = () => {
                             {stock.Emplacement_bejaia || "-"}
                           </span>
                         </td>
-                        <td className="cell-price-ht">
-                          {formatPrix(prixHT || 0)}
-                        </td>
+                       
                         <td className="cell-price-ttc">
                           <span className="price-ttc-badge">
                             {formatPrix(prixTTC || 0)}

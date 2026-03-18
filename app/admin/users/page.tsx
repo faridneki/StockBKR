@@ -337,7 +337,7 @@ const AdminUsersPage = () => {
                     
                     return (
                       <tr key={u.id} className={isSelf ? "current-user" : ""}>
-                        {/* Colonne Nom complet (fixée en premier) */}
+                        {/* Colonne Nom complet */}
                         <td>
                           <div className="cell-with-icon">
                             <UserCog size={14} />
@@ -370,7 +370,7 @@ const AdminUsersPage = () => {
                           </select>
                         </td>
                         
-                        {/* Colonne Statut */}
+                        {/* Colonne Statut - ACTIF/INACTIF */}
                         <td>
                           <span className={`status-badge ${u.actif ? "active" : "inactive"}`}>
                             {u.actif ? "Actif" : "Inactif"}
