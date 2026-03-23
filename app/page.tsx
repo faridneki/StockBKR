@@ -403,7 +403,7 @@ const exportToExcel = () => {
          <div className="stat-card">
             
             <div className="stat-info">              
-              <span className="stat-value warning">ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
+              <span className="stat-value warning" style={{ color: "#ffaf03ff",fontWeight: "bold"}} >ⴰⵏⵚⵓⴼ ⵢⵉⵙ ⵡⴻⵏ</span>
             </div>
           </div>
           <div className="stat-card">
@@ -493,7 +493,7 @@ const exportToExcel = () => {
                   <th style={{ textAlign: "center", color: "#e61089" }}>Takarietz Loc.</th>
                   <th style={{ textAlign: "center", color: "#e0f406" }}>Béjaia Loc.</th>                 
                   
-                  <th style={{ textAlign: "right", color: "#e61089" }}>
+                  <th style={{ textAlign: "center", color: "#50fa7b" }}>
                     Prix TTC
                   </th>
                   <th style={{ textAlign: "center" }}>Statut</th>
@@ -532,7 +532,7 @@ const exportToExcel = () => {
                             : ""
                         }
                       >
-                        <td className="price-ttc-badge">{stock.Reference}</td>
+                        <td className="price-ttc-badge"style={{ color: "#ffaf03ff",fontWeight: "bold"}}>{stock.Reference}</td>
                         <td
                           className="cell-designation"
                           title={stock.Designation || ""}
@@ -560,18 +560,18 @@ const exportToExcel = () => {
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span className="location-badge">
+                          <span className="location-badge" style={{ fontWeight: "bold"}}>
                             {stock.Emplacement_principal || "-"}
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span className="location-badge secondary">
+                          <span className="location-badge secondary" style={{ fontWeight: "bold"}}>
                             {stock.Emplacement_bejaia || "-"}
                           </span>
                         </td>
                        
                         <td className="cell-price-ttc">
-                          <span className="price-ttc-badge">
+                          <span className="price-ttc-badge" style={{ color: "#03ff42ff" }}>
                             {formatPrix(prixTTC || 0)}
                           </span>
                         </td>

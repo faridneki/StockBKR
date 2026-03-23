@@ -267,7 +267,7 @@ body {
 }
 
 .cell-designation {
-  color: #0894f1;
+  color: #f5f6f8;
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -314,7 +314,7 @@ body {
 }
 
 .pagination-info {
-  color: var(--purple);
+  color: #03ffeeff;
   font-size: 0.875rem;
 }
 
@@ -568,7 +568,7 @@ body {
 }
 
 .price-ttc-badge {
-  background-color: #76baf6;
+  background-color: #333436;
   color: #e61089;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
@@ -1231,7 +1231,7 @@ gap: 0.25rem;
   
   border-radius: 6px;
   font-size: 0.85rem;
-  color: #e61089;
+  color: #e005ef;
 }
 
 .location-badge.secondary {
